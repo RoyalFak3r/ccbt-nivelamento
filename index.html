@@ -842,20 +842,22 @@ function calcularEExibirResultado() {
     `;
   } else {
     const zona = ZONAS[categoriaEscolhida];
+    const sugestao = sugerirCategoria(r.total);
+    const faixaSugestao = ZONAS[sugestao] ? ZONAS[sugestao].faixa : '';
     if (r.total < zona.min) {
-      badgeHTML = `<div class="zone-badge warning">Abaixo da faixa de ${categoriaEscolhida}</div>`;
+      badgeHTML = `<div class="zone-badge warning">Categoria sugerida: ${sugestao} (faixa de ranking ${faixaSugestao})</div>`;
       diagHTML = `
         <div class="diagnostic-box warning">
           <div class="diag-title">Seu Score está abaixo da faixa de ${categoriaEscolhida}</div>
-          <div class="diag-text">A faixa esperada para ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) sugere que uma categoria inferior pode ser mais coerente neste momento. Categoria sugerida: <strong>${sugerirCategoria(r.total)}</strong>.</div>
+          <div class="diag-text">A faixa de ranking da categoria ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) está abaixo dela, então uma categoria inferior tende a ser mais coerente neste momento.<br><br><strong>Categoria sugerida: ${sugestao}</strong> — faixa de ranking <strong>${faixaSugestao}</strong>.</div>
         </div>
       `;
     } else if (r.total > zona.max) {
-      badgeHTML = `<div class="zone-badge info">Acima da faixa de ${categoriaEscolhida}</div>`;
+      badgeHTML = `<div class="zone-badge info">Categoria sugerida: ${sugestao} (faixa de ranking ${faixaSugestao})</div>`;
       diagHTML = `
         <div class="diagnostic-box info">
           <div class="diag-title">Seu Score está acima da faixa de ${categoriaEscolhida}</div>
-          <div class="diag-text">A faixa esperada para ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) sugere que uma categoria superior pode ser mais coerente. Categoria sugerida: <strong>${sugerirCategoria(r.total)}</strong>.</div>
+          <div class="diag-text">A faixa de ranking da categoria ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) está acima dela, então uma categoria superior tende a ser mais coerente.<br><br><strong>Categoria sugerida: ${sugestao}</strong> — faixa de ranking <strong>${faixaSugestao}</strong>.</div>
         </div>
       `;
     } else {
