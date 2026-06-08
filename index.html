@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Auto-nivelamento CCBT — Arena Match POInt</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #2563EB;
+    --primary-dark: #1D4ED8;
+    --primary-light: #DBEAFE;
+    --accent: #059669;
+    --accent-light: #D1FAE5;
+    --warning: #D97706;
+    --warning-light: #FEF3C7;
+    --danger: #DC2626;
+    --bg: #F9FAFB;
+    --card: #FFFFFF;
+    --text: #111827;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --border-strong: #9CA3AF;
+  }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100%;
+  }
+  body {
+    padding: 16px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    padding: 20px 12px 24px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .progress {
+    background: var(--border);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .progress-fill {
+    background: var(--primary);
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 999px;
+  }
+  .progress-text {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.06);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .step { display: none; }
+  .step.active { display: block; }
+  .step h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--primary-dark);
+  }
+  .step .hint {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .question {
+    margin-bottom: 20px;
+  }
+  .question label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 15px;
+  }
+  .question .help {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    background: white;
+    color: var(--text);
+    font-family: inherit;
+  }
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  .sub-block {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--primary);
+  }
+  .sub-block h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 12px;
+  }
+  .scale-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .scale-row:last-child { border-bottom: none; }
+  .scale-row .skill {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .scale-row .ratings {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .rating-btn {
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.15s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(37,99,235,0.2);
+    -webkit-appearance: none;
+    appearance: none;
+    flex-shrink: 0;
+  }
+  .rating-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .rating-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .scale-legend {
+    background: var(--primary-light);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--primary-dark);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .error {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 6px;
+    display: none;
+  }
+  .error.show { display: block; }
+  .nav {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .nav-inner {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(37,99,235,0.2);
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 48px;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    flex: 1;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+  .btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 1.5px solid var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--bg); border-color: var(--primary); }
+  .btn-secondary:disabled { color: var(--muted); cursor: not-allowed; }
+  .btn-success {
+    background: var(--accent);
+    color: white;
+    flex: 1;
+  }
+  .btn-success:hover { background: #047857; }
+
+  /* RESULT STYLES */
+  .result-hero {
+    text-align: center;
+    padding: 8px 0 24px;
+  }
+  .result-hero .label {
+    font-size: 14px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .score-big {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin: 8px 0;
+  }
+  .score-big small {
+    font-size: 22px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .zone-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    background: var(--accent-light);
+    color: var(--accent);
+    margin-top: 8px;
+  }
+  .zone-badge.warning {
+    background: var(--warning-light);
+    color: var(--warning);
+  }
+  .zone-badge.info {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+  }
+  .diagnostic-box {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+  }
+  .diagnostic-box.warning {
+    background: var(--warning-light);
+    border-left-color: var(--warning);
+  }
+  .diagnostic-box.info {
+    background: var(--primary-light);
+    border-left-color: var(--primary);
+  }
+  .diagnostic-box .diag-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .diagnostic-box .diag-text {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .breakdown {
+    margin-top: 24px;
+  }
+  .breakdown h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .comp { color: var(--text); }
+  .breakdown-row .pts { font-weight: 600; color: var(--accent); }
+  .breakdown-row .max { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .info-box {
+    background: var(--primary-light);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--primary-dark);
+    line-height: 1.5;
+  }
+  .info-box a {
+    color: var(--primary-dark);
+    text-decoration: underline;
+    font-weight: 600;
+  }
+  @media (max-width: 480px) {
+    body { padding: 12px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+    .card { padding: 20px 16px; }
+    header h1 { font-size: 18px; }
+    .step h2 { font-size: 17px; }
+    .score-big { font-size: 52px; }
+    .scale-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .scale-row .skill { font-size: 14px; }
+    .scale-row .ratings {
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .rating-btn { flex: 1; height: 44px; font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Auto-nivelamento CCBT</h1>
+    <div class="subtitle">Descubra a categoria certa para você competir</div>
+  </header>
+
+  <div class="progress"><div class="progress-fill" id="progress" style="width: 16.6%"></div></div>
+  <div class="progress-text" id="progress-text">Passo 1 de 6</div>
+
+  <!-- STEP 1: CATEGORIA -->
+  <section class="step active card" id="step-1">
+    <h2>1. Categoria pretendida</h2>
+    <div class="hint">Em qual categoria você imagina competir no CCBT? Se ainda não sabe, deixe "Não sei ainda" — o sistema vai sugerir.</div>
+    <div class="question">
+      <label for="categoria">Categoria pretendida</label>
+      <select id="categoria">
+        <option value="">— selecione —</option>
+        <option value="E">E — Estreante</option>
+        <option value="D">D — Intermediário inicial</option>
+        <option value="C">C — Intermediário avançado</option>
+        <option value="B">B — Avançado</option>
+        <option value="Open">Open — Elite / semiprofissional</option>
+        <option value="NaoSei">Não sei ainda</option>
+      </select>
+      <div class="error" id="err-categoria">Selecione uma opção para continuar</div>
+    </div>
+  </section>
+
+  <!-- STEP 2: VOLUME -->
+  <section class="step card" id="step-2">
+    <h2>2. Volume de prática acumulada</h2>
+    <div class="hint">Três blocos: torneios, treino de BT e atividades correlatas. O sistema calcula a partir de duas perguntas em cada um.</div>
+
+    <div class="sub-block">
+      <h3>2A. Torneios de Beach Tennis</h3>
+      <div class="question">
+        <label for="tempo-torneios">Há quanto tempo você joga torneios de Beach Tennis?</label>
+        <select id="tempo-torneios">
+          <option value="">— selecione —</option>
+          <option value="0">Nunca joguei torneios</option>
+          <option value="0.5">Menos de 1 ano</option>
+          <option value="1.5">Entre 1 e 2 anos</option>
+          <option value="4">Entre 3 e 5 anos</option>
+          <option value="8">Entre 6 e 10 anos</option>
+          <option value="12">Mais de 10 anos</option>
+        </select>
+      </div>
+      <div class="question">
+        <label for="freq-torneios">Em média, quantos torneios de BT você joga por ano?</label>
+        <select id="freq-torneios">
+          <option value="">— selecione —</option>
+          <option value="0">Nenhum torneio por ano</option>
+          <option value="1.5">1 a 2 torneios por ano</option>
+          <option value="4">3 a 5 torneios por ano</option>
+          <option value="8">6 a 10 torneios por ano</option>
+          <option value="13">Mais de 10 torneios por ano</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <h3>2B. Tempo jogando Beach Tennis</h3>
+      <div class="question">
+        <label for="tempo-bt">Há quanto tempo você joga Beach Tennis?</label>
+        <select id="tempo-bt">
+          <option value="">— selecione —</option>
+          <option value="0">Nunca pratiquei</option>
+          <option value="0.3">Menos de 6 meses</option>
+          <option value="1">Cerca de 1 ano</option>
+          <option value="2.5">Entre 2 e 3 anos</option>
+          <option value="5">Entre 4 e 6 anos</option>
+          <option value="8.5">Entre 7 e 10 anos</option>
+          <option value="12">Mais de 10 anos</option>
+        </select>
+      </div>
+      <div class="question">
+        <label for="horas-bt">Em média, quantas horas por semana você joga ou jogava BT?</label>
+        <select id="horas-bt">
+          <option value="">— selecione —</option>
+          <option value="0">Não pratico atualmente</option>
+          <option value="1">Cerca de 1 hora por semana</option>
+          <option value="2.5">Cerca de 2 a 3 horas por semana</option>
+          <option value="4.5">Cerca de 4 a 5 horas por semana</option>
+          <option value="7">Cerca de 6 a 8 horas por semana</option>
+          <option value="10">Mais de 8 horas por semana</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <h3>2C. Atividade correlata principal</h3>
+      <div class="question">
+        <label for="atividade">Qual sua principal atividade física antes/além do BT?</label>
+        <select id="atividade">
+          <option value="">— selecione —</option>
+          <option value="1.00">Beach Tennis (própria modalidade)</option>
+          <option value="0.55">Padel</option>
+          <option value="0.55">Pickleball</option>
+          <option value="0.50">Tênis</option>
+          <option value="0.40">Frescobol</option>
+          <option value="0.40">Squash</option>
+          <option value="0.35">Badminton</option>
+          <option value="0.30">Futevôlei</option>
+          <option value="0.25">Vôlei</option>
+          <option value="0.20">Tênis de mesa</option>
+          <option value="0.15">Esportes de bola (futebol, basquete)</option>
+          <option value="0.08">Musculação / corrida / ciclismo / natação / crossfit</option>
+          <option value="0.03">Yoga / pilates / alongamento</option>
+          <option value="0.00">Nenhuma / sedentário</option>
+        </select>
+      </div>
+      <div class="question">
+        <label for="tempo-ativ">Há quanto tempo você pratica/praticou essa atividade?</label>
+        <select id="tempo-ativ">
+          <option value="">— selecione —</option>
+          <option value="0">Nunca pratiquei</option>
+          <option value="0.3">Menos de 6 meses</option>
+          <option value="1">Cerca de 1 ano</option>
+          <option value="2.5">Entre 2 e 3 anos</option>
+          <option value="5">Entre 4 e 6 anos</option>
+          <option value="8.5">Entre 7 e 10 anos</option>
+          <option value="12">Mais de 10 anos</option>
+        </select>
+      </div>
+      <div class="question">
+        <label for="horas-ativ">Em média, quantas horas por semana você praticava?</label>
+        <select id="horas-ativ">
+          <option value="">— selecione —</option>
+          <option value="0">Não pratico atualmente</option>
+          <option value="1">Cerca de 1 hora por semana</option>
+          <option value="2.5">Cerca de 2 a 3 horas por semana</option>
+          <option value="4.5">Cerca de 4 a 5 horas por semana</option>
+          <option value="7">Cerca de 6 a 8 horas por semana</option>
+          <option value="10">Mais de 8 horas por semana</option>
+        </select>
+      </div>
+    </div>
+    <div class="error" id="err-volume">Preencha todos os campos para continuar</div>
+  </section>
+
+  <!-- STEP 3: RESULTADOS -->
+  <section class="step card" id="step-3">
+    <h2>3. Resultados competitivos na categoria pretendida</h2>
+    <div class="hint">Qual seu melhor resultado histórico nessa categoria? Se nunca jogou, escolha a primeira opção.</div>
+    <div class="question">
+      <label for="resultados">Melhor desempenho histórico na categoria</label>
+      <select id="resultados">
+        <option value="">— selecione —</option>
+        <option value="0">Nunca joguei nessa categoria</option>
+        <option value="0">Já joguei mas só fase de grupos</option>
+        <option value="2">Passei da fase de grupos (oitavas/quartas)</option>
+        <option value="4">Já cheguei à semifinal</option>
+        <option value="6">Já cheguei à final (pelo menos 1 vice-campeonato)</option>
+        <option value="8">2 ou mais vice-campeonatos</option>
+        <option value="10">1 título (campeão de etapa)</option>
+        <option value="12">2 títulos</option>
+        <option value="14">3 títulos</option>
+        <option value="15">4 ou mais títulos</option>
+      </select>
+      <div class="error" id="err-resultados">Selecione uma opção para continuar</div>
+    </div>
+  </section>
+
+  <!-- STEP 4: RECÊNCIA -->
+  <section class="step card" id="step-4">
+    <h2>4. Recência da atividade</h2>
+    <div class="hint">Como está sua atividade competitiva e de treino nos últimos 6 meses.</div>
+    <div class="question">
+      <label for="torneios-recentes">Torneios na categoria nos últimos 6 meses</label>
+      <select id="torneios-recentes">
+        <option value="">— selecione —</option>
+        <option value="0">Nenhum nos últimos 6 meses</option>
+        <option value="2">1 torneio nos últimos 6 meses</option>
+        <option value="4">2 torneios nos últimos 6 meses</option>
+        <option value="7">3 ou mais torneios nos últimos 6 meses</option>
+      </select>
+    </div>
+    <div class="question">
+      <label for="treino-recente">Treino regular em BT nos últimos 6 meses</label>
+      <select id="treino-recente">
+        <option value="">— selecione —</option>
+        <option value="0">Não treinei regularmente</option>
+        <option value="3">Até 1 vez por semana em média</option>
+        <option value="5">2 vezes por semana em média</option>
+        <option value="8">3 ou mais vezes por semana em média</option>
+      </select>
+      <div class="error" id="err-recencia">Preencha todos os campos para continuar</div>
+    </div>
+  </section>
+
+  <!-- STEP 5: PERFORMANCE -->
+  <section class="step card" id="step-5">
+    <h2>5. Performance recente</h2>
+    <div class="hint">Para cada habilidade, avalie seu domínio atual em relação ao nível esperado da categoria pretendida.</div>
+    <div class="scale-legend">
+      <strong>Escala:</strong> 0 = Não consigo · 1 = Inconsistente · 2 = Em desenvolvimento · 3 = Consistente · 4 = Avançado · 5 = Domínio
+    </div>
+    <div id="skills-container"></div>
+    <div class="error" id="err-performance">Avalie todas as habilidades para continuar</div>
+  </section>
+
+  <!-- STEP 6: RESULTADO -->
+  <section class="step card" id="step-result">
+    <div class="result-hero">
+      <div class="label">Seu Score de Auto-declaração</div>
+      <div class="score-big" id="score-display">0<small>/100</small></div>
+      <div id="zone-badge-container"></div>
+    </div>
+
+    <div id="diagnostic-container"></div>
+
+    <div class="breakdown">
+      <h3>Decomposição do Score</h3>
+      <div id="breakdown-content"></div>
+    </div>
+
+    <div class="info-box">
+      <strong>Importante:</strong> o Score de Auto-declaração é um <em>indicador</em> da categoria mais alinhada com seu perfil, não um definidor. A decisão final é sua. Após o primeiro turno, o Score de Verificação de Categoria (baseado em resultados reais) ajusta a recomendação.
+    </div>
+  </section>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <button class="btn btn-secondary" id="prev-btn" onclick="prevStep()" style="display:none">Voltar</button>
+      <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Continuar</button>
+    </div>
+  </nav>
+
+</div>
+
+<script>
+// ============================================================
+// DADOS
+// ============================================================
+const HABILIDADES = [
+  'Saque consistente (por baixo e por cima)',
+  'Devolução firme contra bola pesada',
+  'Smash de zonas distantes',
+  'Voleio de defesa',
+  'Leitura de jogo (antecipa onde a bola vai)',
+  'Decisão sob pressão em pontos importantes',
+  'Ritmo e endurance ao longo da partida',
+  'Variação de bola (slice, lob, ataque)',
+  'Comunicação e sincronia com parceiro',
+  'Confiança em momentos críticos do jogo'
+];
+
+const ZONAS = {
+  E:    { faixa: '0 a 30',   min: 0,  max: 30  },
+  D:    { faixa: '10 a 60',  min: 10, max: 60  },
+  C:    { faixa: '30 a 80',  min: 30, max: 80  },
+  B:    { faixa: '60 a 92',  min: 60, max: 92  },
+  Open: { faixa: '85 a 100', min: 85, max: 100 }
+};
+
+const TOTAL_STEPS = 6;
+let currentStep = 1;
+const skillRatings = new Array(HABILIDADES.length).fill(null);
+
+// ============================================================
+// SETUP — habilidades
+// ============================================================
+function buildSkills() {
+  const container = document.getElementById('skills-container');
+  HABILIDADES.forEach((hab, idx) => {
+    const row = document.createElement('div');
+    row.className = 'scale-row';
+    const skill = document.createElement('div');
+    skill.className = 'skill';
+    skill.textContent = hab;
+    const ratings = document.createElement('div');
+    ratings.className = 'ratings';
+    for (let i = 0; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'rating-btn';
+      btn.textContent = i;
+      btn.type = 'button';
+      btn.dataset.skill = idx;
+      btn.dataset.value = i;
+      btn.onclick = () => selectRating(idx, i);
+      ratings.appendChild(btn);
+    }
+    row.appendChild(skill);
+    row.appendChild(ratings);
+    container.appendChild(row);
+  });
+}
+
+function selectRating(skillIdx, value) {
+  skillRatings[skillIdx] = value;
+  const buttons = document.querySelectorAll(`button[data-skill="${skillIdx}"]`);
+  buttons.forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.value) === value);
+  });
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  if (n <= 5) {
+    document.getElementById('step-' + n).classList.add('active');
+  } else {
+    document.getElementById('step-result').classList.add('active');
+  }
+  // Progress
+  const pct = (n / TOTAL_STEPS) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = n === 6 ? 'Resultado' : `Passo ${n} de ${TOTAL_STEPS}`;
+
+  // Buttons
+  document.getElementById('prev-btn').style.display = n > 1 && n < 6 ? 'inline-block' : 'none';
+  const nextBtn = document.getElementById('next-btn');
+  if (n < 5) {
+    nextBtn.textContent = 'Continuar';
+    nextBtn.className = 'btn btn-primary';
+    nextBtn.style.display = 'inline-block';
+  } else if (n === 5) {
+    nextBtn.textContent = 'Ver meu resultado';
+    nextBtn.className = 'btn btn-success';
+    nextBtn.style.display = 'inline-block';
+  } else {
+    nextBtn.textContent = 'Recomeçar';
+    nextBtn.className = 'btn btn-secondary';
+    nextBtn.style.display = 'inline-block';
+    nextBtn.onclick = restart;
+  }
+
+  // Scroll top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(n) {
+  // Esconder erros prévios
+  document.querySelectorAll('.error').forEach(e => e.classList.remove('show'));
+
+  if (n === 1) {
+    if (!document.getElementById('categoria').value) {
+      document.getElementById('err-categoria').classList.add('show');
+      return false;
+    }
+  }
+  if (n === 2) {
+    const fields = ['tempo-torneios','freq-torneios','tempo-bt','horas-bt','atividade','tempo-ativ','horas-ativ'];
+    for (const f of fields) {
+      if (document.getElementById(f).value === '') {
+        document.getElementById('err-volume').classList.add('show');
+        return false;
+      }
+    }
+  }
+  if (n === 3) {
+    if (document.getElementById('resultados').value === '') {
+      document.getElementById('err-resultados').classList.add('show');
+      return false;
+    }
+  }
+  if (n === 4) {
+    if (document.getElementById('torneios-recentes').value === '' ||
+        document.getElementById('treino-recente').value === '') {
+      document.getElementById('err-recencia').classList.add('show');
+      return false;
+    }
+  }
+  if (n === 5) {
+    if (skillRatings.includes(null)) {
+      document.getElementById('err-performance').classList.add('show');
+      return false;
+    }
+  }
+  return true;
+}
+
+function nextStep() {
+  if (!validateStep(currentStep)) return;
+  currentStep++;
+  if (currentStep > 5) {
+    calcularEExibirResultado();
+  }
+  showStep(currentStep);
+}
+
+function prevStep() {
+  currentStep--;
+  if (currentStep < 1) currentStep = 1;
+  showStep(currentStep);
+}
+
+function restart() {
+  // Limpar todos os campos
+  document.querySelectorAll('select').forEach(s => s.value = '');
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('active'));
+  for (let i = 0; i < skillRatings.length; i++) skillRatings[i] = null;
+  currentStep = 1;
+  document.getElementById('next-btn').onclick = nextStep;
+  showStep(1);
+}
+
+// ============================================================
+// CÁLCULO DO SCORE
+// ============================================================
+function calcularScore() {
+  // 2A — Torneios
+  const tt = parseFloat(document.getElementById('tempo-torneios').value);
+  const ft = parseFloat(document.getElementById('freq-torneios').value);
+  const torneiosTotais = tt * ft;
+  const ptsTorneios = Math.min(8, torneiosTotais * 0.3);
+
+  // 2B — Horas BT
+  const tBT = parseFloat(document.getElementById('tempo-bt').value);
+  const hBT = parseFloat(document.getElementById('horas-bt').value);
+  const horasBT = tBT * 50 * hBT;
+  const ptsHorasBT = Math.min(8, horasBT / 125);
+
+  // 2C — Atividade correlata
+  const fator = parseFloat(document.getElementById('atividade').value);
+  const tAtv = parseFloat(document.getElementById('tempo-ativ').value);
+  const hAtv = parseFloat(document.getElementById('horas-ativ').value);
+  const horasAtv = tAtv * 50 * hAtv;
+  const ptsAtv = Math.min(4, horasAtv * fator / 250);
+
+  // VPA total
+  const vpa = Math.min(20, ptsTorneios + ptsHorasBT + ptsAtv);
+
+  // 3 — Resultados Competitivos
+  const rc = parseFloat(document.getElementById('resultados').value);
+
+  // 4 — Recência
+  const rt = parseFloat(document.getElementById('torneios-recentes').value);
+  const tr = parseFloat(document.getElementById('treino-recente').value);
+  const recencia = Math.min(15, rt + tr);
+
+  // 5 — Performance Recente
+  const pr = skillRatings.reduce((acc, v) => acc + (v || 0), 0);
+
+  // Score Total
+  const total = vpa + rc + recencia + pr;
+
+  return { vpa, rc, recencia, pr, total };
+}
+
+function sugerirCategoria(score) {
+  if (score < 10) return 'E';
+  if (score < 33) return 'D';
+  if (score < 53) return 'C';
+  if (score < 80) return 'B';
+  return 'Open';
+}
+
+function calcularEExibirResultado() {
+  const r = calcularScore();
+  const categoriaEscolhida = document.getElementById('categoria').value;
+
+  // Score display
+  document.getElementById('score-display').innerHTML =
+    r.total.toFixed(1) + '<small>/100</small>';
+
+  // Zone badge + diagnóstico
+  const badgeContainer = document.getElementById('zone-badge-container');
+  const diagContainer = document.getElementById('diagnostic-container');
+
+  let badgeHTML = '';
+  let diagHTML = '';
+
+  if (categoriaEscolhida === 'NaoSei') {
+    const sugestao = sugerirCategoria(r.total);
+    const faixaSugestao = ZONAS[sugestao].faixa;
+    badgeHTML = `<div class="zone-badge info">Categoria sugerida: ${sugestao}</div>`;
+    diagHTML = `
+      <div class="diagnostic-box info">
+        <div class="diag-title">Comece pela categoria ${sugestao}</div>
+        <div class="diag-text">Seu Score (${r.total.toFixed(1)}) se encaixa naturalmente na faixa ${faixaSugestao} desta categoria. Após algumas etapas, o Score de Verificação (baseado em resultados reais) confirma ou ajusta essa recomendação.</div>
+      </div>
+    `;
+  } else {
+    const zona = ZONAS[categoriaEscolhida];
+    if (r.total < zona.min) {
+      badgeHTML = `<div class="zone-badge warning">Abaixo da faixa de ${categoriaEscolhida}</div>`;
+      diagHTML = `
+        <div class="diagnostic-box warning">
+          <div class="diag-title">Seu Score está abaixo da faixa de ${categoriaEscolhida}</div>
+          <div class="diag-text">A faixa esperada para ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) sugere que uma categoria inferior pode ser mais coerente neste momento. Categoria sugerida: <strong>${sugerirCategoria(r.total)}</strong>.</div>
+        </div>
+      `;
+    } else if (r.total > zona.max) {
+      badgeHTML = `<div class="zone-badge info">Acima da faixa de ${categoriaEscolhida}</div>`;
+      diagHTML = `
+        <div class="diagnostic-box info">
+          <div class="diag-title">Seu Score está acima da faixa de ${categoriaEscolhida}</div>
+          <div class="diag-text">A faixa esperada para ${categoriaEscolhida} é ${zona.faixa}. Seu Score (${r.total.toFixed(1)}) sugere que uma categoria superior pode ser mais coerente. Categoria sugerida: <strong>${sugerirCategoria(r.total)}</strong>.</div>
+        </div>
+      `;
+    } else {
+      badgeHTML = `<div class="zone-badge">Score coerente com ${categoriaEscolhida}</div>`;
+      diagHTML = `
+        <div class="diagnostic-box">
+          <div class="diag-title">Seu Score está dentro da faixa de ${categoriaEscolhida}</div>
+          <div class="diag-text">A faixa esperada para ${categoriaEscolhida} é ${zona.faixa}, e seu Score (${r.total.toFixed(1)}) cai dentro dela. Esta categoria é coerente com seu perfil — bons jogos no CCBT!</div>
+        </div>
+      `;
+    }
+  }
+
+  badgeContainer.innerHTML = badgeHTML;
+  diagContainer.innerHTML = diagHTML;
+
+  // Breakdown
+  const breakdown = document.getElementById('breakdown-content');
+  breakdown.innerHTML = `
+    <div class="breakdown-row">
+      <span class="comp">Volume de Prática Acumulada</span>
+      <span><span class="pts">${r.vpa.toFixed(2)}</span><span class="max">/20</span></span>
+    </div>
+    <div class="breakdown-row">
+      <span class="comp">Resultados Competitivos na categoria</span>
+      <span><span class="pts">${r.rc.toFixed(0)}</span><span class="max">/15</span></span>
+    </div>
+    <div class="breakdown-row">
+      <span class="comp">Recência da Atividade</span>
+      <span><span class="pts">${r.recencia.toFixed(0)}</span><span class="max">/15</span></span>
+    </div>
+    <div class="breakdown-row">
+      <span class="comp">Performance Recente</span>
+      <span><span class="pts">${r.pr.toFixed(0)}</span><span class="max">/50</span></span>
+    </div>
+  `;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+buildSkills();
+showStep(1);
+</script>
+</body>
+</html>
